@@ -1,0 +1,40 @@
+analog_control_mode: ACC
+analog_modulation_state: EXT
+base_plate_temp: BT
+laser_diode_current: C
+cdrh_state: CDRH
+modulation_state: CW
+diode_temp_set_point: DST
+measured_diode_temp: DT
+measured_module_temp: ET
+fault_number: F
+cum_time_of_operation: HH
+serial_num_and_wavelength: HID
+interlock_state: INT
+input_voltage: IV
+laser_emission_activation: L
+max_laser_current: MAXLC
+max_laser_power: MAXLP
+laser_output_power: P
+processor_temp: PST
+current_set_point: SC
+power_set_point: SP
+operating_status: STA
+software_version: SV
+emission_activation: L
+alarm_reset: RST
+tec_enable: T
+digital_modulation_state: TTL
+settable:
+    - analog_control_mode
+    - analog_modulation_state
+    - laser_diode_current
+    - cdrh_state
+    - modulation_state
+    - laser_emission_activation
+    - laser_output_power
+    - tec_state
+    - emission_activation
+    - alarm_reset
+    - tec_enable
+    - digital_modulation_state
