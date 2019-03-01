@@ -62,14 +62,17 @@ class BaseCamera(BaseDevice):
         return ReadMode.LIVE
 
     def initialize(self):
+        # print("init called")
         try:
             if self.mode == ReadMode.LIVE:
                 self.img_buffer = deque(maxlen=1)
             else:
                 self.img_buffer = deque(maxlen=self.buffer_size)
             success = self.init_cam()
+            # print("init success: ", success)
             self.initialized = success
-        except:
+        except Exception as e:
+            print("init exception: ", e)
             return False
 
     def init_cam(self):
@@ -79,7 +82,9 @@ class BaseCamera(BaseDevice):
         # self.recorder(num=num)
         self.user_wants_stop = False
         if not self.initialized:
-            self.initialize()
+            success = self.initialize()
+            if not success:
+                return False
         self.t = threading.Thread(target=self.recorder, args=(num,))
         self.t.setDaemon(True)
         self.t.start()
@@ -164,7 +169,8 @@ class OpenCVCamera(BaseCamera):
     cam_num = Int(0)
     exposure = Int(5)
     gain = Int(1)
-    shape = Tuple((480, 640, 0), cols=3, labels=['Rows', 'Columns','Color'])
+    # (480, 640, 0)
+    shape = Tuple(cols=3, labels=['Rows', 'Columns','Color'])
     color_mode = Enum('GREYSCALE', ['RGB', 'GREYSCALE'])
     # image_buffer = List
     # buffer_size = Int(50)
@@ -198,15 +204,17 @@ class OpenCVCamera(BaseCamera):
             return True
         try:
             import cv2
+            # print('cv2 imported')
             # import ids
         except:
+            # print('cv2 not imported')
             return False
 
         logger = logging.getLogger('__main__')
         self.cap = cv2.VideoCapture(self.cam_num)
         rows = self.cap.get(3)
         cols = self.cap.get(4)
-        self.shape = (rows, cols)
+        # self.shape = (int(rows), int(cols), 0)
         # self.cam.color_mode = ids.ids_core.COLOR_RGB8
         # self.cam.exposure = self.exposure
         if self.cap.isOpened():
@@ -221,17 +229,23 @@ class OpenCVCamera(BaseCamera):
             # self.figure.tight_layout()
 
     def record(self,max=None,cont=False):
+
         if self.initialized:
+            # print('initialized')
             ret, img = self.cap.read()
+            # print(ret)
             if ret:
                 # grey = img.sum(axis=2)
                 if self.color_mode == 'GREYSCALE':
                     img = np.dot(img[..., :3], [0.299, 0.587, 0.114])
                 if img.shape != self.shape:
                     self.shape = img.shape
+                # print(img[0])
                 self.add_to_queue(img)
-                return 1
-        return 0
+                return True
+        else:
+            print('not initialized')
+        return False
 
     def on_close(self):
         if self.initialized and self.cap.isOpened():

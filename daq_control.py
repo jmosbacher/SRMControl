@@ -86,7 +86,9 @@ class BaseDAQReadChannel(BaseDAQChannel):
             from global_state_manager import GlobalStateManager
             gsm = GlobalStateManager()
             self.reader = gsm.active_state
-            return self.read_data()
+            data = self.reader.read_data()
+            return data.pop(self.phys_name, np.array([np.nan]))
+            
 
 
 class BaseDAQWriteChannel(BaseDAQChannel):
@@ -603,10 +605,12 @@ class FrequencyTask(BaseDAQTask):
             data = np.empty((nsamp,), dtype=np.float64)
         else:
             data = arr
-
+        dcycles = np.empty((nsamp,), dtype=np.float64)
 
         nread = self.reader.read_many_sample_double(data,
                     number_of_samples_per_channel=nsamp, timeout=self.timeout)
+        nread = self.reader.read_many_sample_pulse_frequency(data,dcycles,
+                                                    number_of_samples_per_channel=nsamp, timeout=self.timeout)
 
         if nread != nsamp:
             return {}

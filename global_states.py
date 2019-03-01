@@ -116,7 +116,7 @@ class BaseDAQState(BaseGlobalState):
 
     def _add_task_fired(self):
         if IOService.services_all(self.requires, self.sel_task.provides):
-            self.task.append(self.sel_task)
+            self.tasks.append(self.sel_task)
 
     def _rem_task_fired(self):
         if self.task in self.tasks:
@@ -125,8 +125,8 @@ class BaseDAQState(BaseGlobalState):
     def activate(self):
         if self.initialized and self.tasks:
             self.active = True
-            for task in self.tasks:
-                task.start()
+            # for task in self.tasks:
+            #     task.start()
         else:
             if self.initialize():
                 self.activate()
@@ -153,7 +153,9 @@ class DAQRead(BaseDAQState):
     def read_data(self, names=None):
         data_dict = {}
         for task in self.tasks:
+            task.start()
             data = task.read_data()
+            task.stop()
             for key, val in data.items():
                 data_dict[key] = val
         self.data = data_dict

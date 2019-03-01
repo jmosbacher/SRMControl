@@ -20,50 +20,50 @@ class BaseController(SingletonHasTraits):
     def __repr__(self):
         return self.name
 
-# class ZIDemodController(SingletonHasTraits):
-#     class_name = 'ZIDemodController'
-#     #daq = Instance(zi.ziDAQServer)
-#     hostname = Str('localhost')
-#     api_level = Int(5)
-#     port = Int(8004)
-#     dev_name = Str()
-#
-#     view = View(
-#         VGroup(
-#             Item(name='hostname', label='Hostname', ),
-#             Item(name='dev_name', label='Device name'),
-#             HGroup(
-#                 Item(name='port', label='Port', width=-80),
-#
-#                 Item(name='api_level', label='API level', width=-60),
-#             ),
-#
-#
-#         ),
-#
-#     )
-#
-#     @on_trait_change('hostname','port','api_level')
-#     def initialize(self):
-#         self.daq = zi.ziDAQServer(self.hostname, self.port,self.api_level)
-#         self.dev_name = zhinst.utils.autoDetect(self.daq)
-#
-#     def subscribe(self,demod_num=0):
-#         path = '/{}/demod/{}/sample'.format(self.dev_name,demod_num)
-#         self.daq.subscribe(path)
-#         self.daq.sync()
-#
-#     def unsubscribe(self,demod_num=0):
-#         path = '/{}/demod/{}/sample'.format(self.dev_name, demod_num)
-#         self.daq.unsubscribe(path)
-#         self.daq.sync()
-#
-#     def sync(self):
-#         self.daq.sync(self.daq)
-#
-#     def poll(self,duration,timeout=500,fill_flag=0, flat_dict=True):
-#         data = self.daq.poll(duration,timeout,fill_flag,flat_dict)
-#         return data
+class ZIDemodController(SingletonHasTraits):
+    class_name = 'ZIDemodController'
+    #daq = Instance(zi.ziDAQServer)
+    hostname = Str('localhost')
+    api_level = Int(5)
+    port = Int(8004)
+    dev_name = Str()
+
+    view = View(
+        VGroup(
+            Item(name='hostname', label='Hostname', ),
+            Item(name='dev_name', label='Device name'),
+            HGroup(
+                Item(name='port', label='Port', width=-80),
+
+                Item(name='api_level', label='API level', width=-60),
+            ),
+
+
+        ),
+
+    )
+
+    @on_trait_change('hostname','port','api_level')
+    def initialize(self):
+        self.daq = zi.ziDAQServer(self.hostname, self.port,self.api_level)
+        self.dev_name = zhinst.utils.autoDetect(self.daq)
+
+    def subscribe(self,demod_num=0):
+        path = '/{}/demod/{}/sample'.format(self.dev_name,demod_num)
+        self.daq.subscribe(path)
+        self.daq.sync()
+
+    def unsubscribe(self,demod_num=0):
+        path = '/{}/demod/{}/sample'.format(self.dev_name, demod_num)
+        self.daq.unsubscribe(path)
+        self.daq.sync()
+
+    def sync(self):
+        self.daq.sync(self.daq)
+
+    def poll(self,duration,timeout=500,fill_flag=0, flat_dict=True):
+        data = self.daq.poll(duration,timeout,fill_flag,flat_dict)
+        return data
 
 
 class BaseSerialController(BaseController):
@@ -241,14 +241,19 @@ class MicronixStageController(BaseSerialController, BaseStageController):
 
 
     def has_errors(self, status_byte):
-        bits = np.unpackbits(np.uint8(status_byte))
-        return bits[0]
+        try:
+            bits = np.unpackbits(np.uint8(status_byte))
+            return bits[0]
+        except:
+            return 1
 
 
     def has_stopped(self, status_byte):
-        bits = np.unpackbits(np.uint8(status_byte))
-        return bits[4]
-
+        try:
+            bits = np.unpackbits(np.uint8(status_byte))
+            return bits[4]
+        except:
+            return 1
 
     def decode_reply(self,message):
         if message is None:
@@ -263,6 +268,8 @@ class MicronixStageController(BaseSerialController, BaseStageController):
         return value
 
     def read_errors(self, axis_num):
+        if not hasattr(self, 'controller'):
+            return []
         errors = self.controller.send_cmd(axis_num, 'read_errors', value='?', response=True)
         if not isinstance(errors, list):
             errors = [errors]
@@ -276,8 +283,11 @@ class MicronixStageController(BaseSerialController, BaseStageController):
             if self.has_errors(status):
                 errs = self.read_errors(axis_num)
             if self.has_stopped(status):
-                calc, enc = self.query(message).strip().replace('#', '').split(',')
-                return float(calc), float(enc)
+                try:
+                    calc, enc = self.query(message).strip().replace('#', '').split(',')
+                    return float(calc), float(enc)
+                except:
+                    pass
         return 0.0,0.0
 
 
@@ -492,6 +502,9 @@ class OxxiusLaserController(BaseSerialController):
 class MockMicronixStageController(BaseStageController):
     name = 'Mock Micronix Stage Controller'
     _positions = Dict({})
+    provides = {IOService.AXIS_MOVE_ABSOLUTE,
+                IOService.AXIS_MOVE_RELATIVE,
+                IOService.AXIS_POSITION}
     logger = Any(transient=True)
 
     def __init__(self,*args, **kwargs):

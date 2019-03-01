@@ -998,93 +998,93 @@ class ImageCollectionBrowser(BaseViewer):
 from traits.api import HasTraits, Instance, Property, Enum
 from traitsui.api import View, Item, HSplit, VSplit, InstanceEditor
 #from tvtk.pyface.scene_editor import SceneEditor
-from mayavi.core.ui.engine_view import EngineView
-#from mayavi.tools.mlab_scene_model import MlabSceneModel
-from mayavi.core.ui.api import MayaviScene, MlabSceneModel, \
-    SceneEditor
-
-######################################################################
-class ThreeDPointViewer(BaseViewer):
-    class_name = 'ThreeDPointViewer'
-    # The scene model.
-    scene = Instance(MlabSceneModel, ())
-    #plot = Instance()
-    # The mayavi engine view.
-    engine_view = Instance(EngineView)
-    working = Bool(False)
-    data = Array
-    positions = Array
-    opacity = Float(0.05)
-    mode = Enum('cube',['cube','2dsquare','2dcircle','sphere'])
-    show = Button('Show')
-
-    ######################
-    view = View(VGroup(
-        HGroup(
-
-            Item(name='opacity', label='Opacity', ),
-            Item(name='mode', label='Mode', ),
-            Item(name='show',show_label=False),
-        ),
-
-        Item(name='scene',
-             editor=SceneEditor(scene_class=MayaviScene),
-             show_label=False,
-             resizable=True,
-             height=500,
-             width=500),
-    ),
-
-                resizable=True,
-                scrollable=True
-                )
-
-    def __init__(self, **traits):
-        HasTraits.__init__(self, **traits)
-        #self.engine_view = EngineView(engine=self.scene.engine)
-        self.plot = None
-
-    @on_trait_change('scene.activated,show')
-    def plot_measurement(self):
-        #self.working = True
-        if self.measurement is None:
-            return
-        if self.positions is None:
-            return
-        self.scene.mlab.clf()
-        x = self.positions[:,:,:,0]
-        y = self.positions[:,:,:,1]
-        z = self.positions[:,:,:,2]
-        s = self.data
-        self.plot = self.scene.mlab.points3d(x, y, z, s,scale_mode='none',
-                                             mode=self.mode, #colormap='YlOrRd',
-                                             transparent=True,
-                                             figure=self.scene.mayavi_scene,
-                                             opacity=self.opacity,scale_factor=0.01)
-        self.plot.glyph.glyph.clamping = False
-        #self.scene.disable_render = True
-        #self.working = False
-
-    #@on_trait_change('measurement, positions')
-    def update_data(self):
-        if self.working:
-            return
-        self.working = True
-        if self.plot is None:
-            return
-        x = self.positions[:,:,:,0]
-        y = self.positions[:, :, :, 1]
-        z = self.positions[:, :, :, 2]
-        s = self.measurement.results
-        self.plot.mlab_source.set(x=x, y=y, z=z, scalars=s)
-        self.scene.reset_zoom()
-        self.working = False
-
-    def __repr__(self):
-        return self.class_name
-
-    def __str__(self):
-        return self.class_name
+# from mayavi.core.ui.engine_view import EngineView
+# #from mayavi.tools.mlab_scene_model import MlabSceneModel
+# from mayavi.core.ui.api import MayaviScene, MlabSceneModel, \
+#     SceneEditor
+# 
+# ######################################################################
+# class ThreeDPointViewer(BaseViewer):
+#     class_name = 'ThreeDPointViewer'
+#     # The scene model.
+#     scene = Instance(MlabSceneModel, ())
+#     #plot = Instance()
+#     # The mayavi engine view.
+#     engine_view = Instance(EngineView)
+#     working = Bool(False)
+#     data = Array
+#     positions = Array
+#     opacity = Float(0.05)
+#     mode = Enum('cube',['cube','2dsquare','2dcircle','sphere'])
+#     show = Button('Show')
+# 
+#     ######################
+#     view = View(VGroup(
+#         HGroup(
+# 
+#             Item(name='opacity', label='Opacity', ),
+#             Item(name='mode', label='Mode', ),
+#             Item(name='show',show_label=False),
+#         ),
+# 
+#         Item(name='scene',
+#              editor=SceneEditor(scene_class=MayaviScene),
+#              show_label=False,
+#              resizable=True,
+#              height=500,
+#              width=500),
+#     ),
+# 
+#                 resizable=True,
+#                 scrollable=True
+#                 )
+# 
+#     def __init__(self, **traits):
+#         HasTraits.__init__(self, **traits)
+#         #self.engine_view = EngineView(engine=self.scene.engine)
+#         self.plot = None
+# 
+#     @on_trait_change('scene.activated,show')
+#     def plot_measurement(self):
+#         #self.working = True
+#         if self.measurement is None:
+#             return
+#         if self.positions is None:
+#             return
+#         self.scene.mlab.clf()
+#         x = self.positions[:,:,:,0]
+#         y = self.positions[:,:,:,1]
+#         z = self.positions[:,:,:,2]
+#         s = self.data
+#         self.plot = self.scene.mlab.points3d(x, y, z, s,scale_mode='none',
+#                                              mode=self.mode, #colormap='YlOrRd',
+#                                              transparent=True,
+#                                              figure=self.scene.mayavi_scene,
+#                                              opacity=self.opacity,scale_factor=0.01)
+#         self.plot.glyph.glyph.clamping = False
+#         #self.scene.disable_render = True
+#         #self.working = False
+# 
+#     #@on_trait_change('measurement, positions')
+#     def update_data(self):
+#         if self.working:
+#             return
+#         self.working = True
+#         if self.plot is None:
+#             return
+#         x = self.positions[:,:,:,0]
+#         y = self.positions[:, :, :, 1]
+#         z = self.positions[:, :, :, 2]
+#         s = self.measurement.results
+#         self.plot.mlab_source.set(x=x, y=y, z=z, scalars=s)
+#         self.scene.reset_zoom()
+#         self.working = False
+# 
+#     def __repr__(self):
+#         return self.class_name
+# 
+#     def __str__(self):
+#         return self.class_name
 
 class TwoDScalarInspector(BaseViewer):
     class_name = 'TwoDScalarInspector'

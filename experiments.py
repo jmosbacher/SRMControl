@@ -167,20 +167,18 @@ class SWSynchronizedScan(BaseExperiment):
 
                     spring,
                     Item(name='position', label='Position', style='readonly',format_func=format_pos),
-                    Item(name='perc_done_bar', show_label=False,style='readonly',
-                        width=240,enabled_when='False'),
+                    Item(name='perc_done_bar', show_label=False, style='readonly',
+                        width=240, enabled_when='False'),
                     show_border=True, label='Scan'),
 
                 Group(
                     HGroup(
                             VGroup(
 
-
-
                                 VGroup(
                                     HGroup(
                                         Item(name='get_cursor', show_label=False,
-                                             width=-80, enabled_when='False'),
+                                             width=-80,),
                                         Item(name='get_current', show_label=False, width=-80),
                                         Item(name='set_scan_area', show_label=False, width=-80),
                                     ),
@@ -283,13 +281,17 @@ class SWSynchronizedScan(BaseExperiment):
     #def _display3d_default(self):
         #return ThreeDPointViewer()
 
-    # def _get_cursor_fired(self):
-    #     x0, y0 = tuple(self.display.cursor.current_position)
-    #     z0 = 0.0
-    #     zaxis = self.display.zaxis
-    #     if zaxis:
-    #         z0 = zaxis.start_pos + (zaxis.stop_pos - zaxis.start_pos) * self.display.zpos / zaxis.nsteps
-    #     self.scan_center = x0, y0, z0
+    def _get_cursor_fired(self):
+        xyz = [0.0,0.0,0.0]
+        xaxis, yaxis, zaxis = self.scan_axes
+        for n,axis in enumerate(self.scan_axes):
+            if axis.axis_name in ['X', 'x', 0]:
+                xyz[0] = axis.start_pos + (axis.stop_pos - axis.start_pos) * self.measurement.display.xpos / axis.nsteps
+            elif axis.axis_name in ['Y', 'y', 1]:
+                xyz[1] = axis.start_pos + (axis.stop_pos - axis.start_pos) * self.measurement.display.ypos / axis.nsteps
+            elif axis.axis_name == 'Z' and hasattr(self.measurement.display, 'zpos'):
+                xyz[2] = axis.start_pos + (axis.stop_pos - zaxis.start_pos) * self.measurement.display.zpos / axis.nsteps
+        self.scan_center = x0, y0, z0
 
     def _get_current_fired(self):
         xyz = [0.0,0.0,0.0]
@@ -298,25 +300,26 @@ class SWSynchronizedScan(BaseExperiment):
                 xyz[0] = axis.current_pos()
             elif axis.axis_name == 'Y':
                 xyz[1] = axis.current_pos()
-
             elif axis.axis_name == 'Z':
                 xyz[2] = axis.current_pos()
             else:
-                xyz[n] = axis.current_pos()
+                xyz[2-n] = axis.current_pos()
         self.scan_center = tuple(xyz)
 
 
     def _set_scan_area_fired(self):
-        x0,y0, z0 = self.scan_center
+        x0,y0,z0 = self.scan_center
+        dx,dy,dz = self.steps
         for n,axis in enumerate(self.scan_axes):
             if axis.axis_name=='X':
                 axis.start_pos, axis.stop_pos = x0 - self.volume[0] / 2, x0 + self.volume[0] / 2
-
+                axis.step_size = dx
             elif axis.axis_name == 'Y':
                 axis.start_pos, axis.stop_pos = y0 - self.volume[1] / 2, y0 + self.volume[1] / 2
-
+                axis.step_size = dy
             elif axis.axis_name == 'Z':
                 axis.start_pos, axis.stop_pos = z0 - self.volume[2] / 2, z0 + self.volume[2] / 2
+                axis.step_size = dz
 
     def _remove_axis_fired(self):
         self.scan_axes.remove(self.sel_axis)
@@ -332,7 +335,7 @@ class SWSynchronizedScan(BaseExperiment):
             new = CartesianScanAxis()
             new.axis_num = n + 1
             new.axis_name = name
-            new.step_size = 0.01
+            new.step_size = 1e-5
             axes.append(new)
         return list(reversed(axes))
 
@@ -354,6 +357,7 @@ class SWSynchronizedScan(BaseExperiment):
     @property_depends_on('scan_axes[]')
     def _get_npos(self):
         return np.product([axis.nsteps+1 for axis in self.scan_axes ])
+    
     def nposs(self):
         return np.product([axis.nsteps + 1 for axis in self.scan_axes])
 
@@ -427,7 +431,7 @@ class SWSynchronizedScan(BaseExperiment):
             if self.status == ExperimentStatus.CANCELED:
                 raise RuntimeError
 
-            for n, (idx,position) in enumerate(multi_enum(self.scan_axes)):
+            for n, (idx, position) in enumerate(multi_enum(self.scan_axes)):
 
                 if None in position:
                     break

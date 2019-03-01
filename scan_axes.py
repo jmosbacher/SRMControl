@@ -1,5 +1,7 @@
 from traits.api import *
 from traitsui.api import *
+from traitsui.extras.checkbox_column \
+    import CheckboxColumn
 import numpy as np
 from controllers import BaseStageController
 from device_manager import DeviceManager
@@ -179,7 +181,9 @@ class AxisTableEditor(TableEditor):
         ObjectColumn(name='start_pos', label='Start [mm]', width=0.20),
         ObjectColumn(name='stop_pos', label='Stop [mm]', width=0.20),
         ObjectColumn(name='step_size', label='Step [mm]', width=0.20),
+        CheckboxColumn(name='reverse_at_end', label='Snake', width=0.20),
         ObjectColumn(name='nsteps', label='# Steps',style='readonly', width=0.20),
+
 
     ]
     #deletable = True

@@ -10,7 +10,6 @@ class Globals(SingletonHasTraits):
     MOCK_STAGE = Bool(False)
     DEBUG = Bool(False)
 
-
     FILE_DIR = Directory(local_dir)
     ICON_DIR = Directory(os.path.join(local_dir, 'icons'))
     AUTOSAVE_PATH = File(os.path.join(local_dir, 'autosave.cfg'))

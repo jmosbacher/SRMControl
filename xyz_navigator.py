@@ -184,9 +184,13 @@ class XYZNavigator(HasTraits):
         self.position = tuple(pos)
 
     def refresh_position(self):
+        if not hasattr(self, 'controller'):
+            return
         pos = []
         for label in self.labels:
             axis = getattr(self, label)
+            
             p = round(self.controller.position(axis)[1],6)
             pos.append(p)
+           
         self.position = tuple(pos)
